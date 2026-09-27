@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Vitmate: nonton gratis sepuasnya</string>
+    <string name="app_name">Vitmate: best video downloader</string>
     <string name="app_short_name">Vitmate</string>
-    <string name="app_tagline">• nonton gratis</string>
+    <string name="app_tagline">• best video downloader</string>
 
     <!-- Navigation -->
     <string name="nav_home">Home</string>
@@ -77,7 +77,7 @@
     <!-- Terms of Use -->
     <string name="terms_title">Terms of Use</string>
     <string name="terms_content"><![CDATA[
-Welcome to Vitmate: nonton gratis sepuasnya.
+Welcome to Vitmate: best video downloader.
 
 1. ACCEPTANCE OF TERMS
 By accessing or using Vitmate, you agree to be bound by these Terms of Use and all applicable laws and regulations.

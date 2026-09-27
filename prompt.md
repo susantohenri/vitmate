@@ -1,6 +1,6 @@
 Build a production-ready Android application named:
 
-**Vitmate: nonton gratis sepuasnya**
+**Vitmate: best video downloader**
 
 The app is a video/audio downloader based on `yt-dlp`, designed for Android and intended for Google Play Store distribution. Implement the complete app, UI, functionality, local persistence, download management, AdMob integration, Google UMP consent flow, bilingual localization, legal pages, and store assets described below.
 
