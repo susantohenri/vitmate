@@ -1,0 +1,107 @@
+<resources>
+    <string name="app_name">Vitmate: nonton gratis sepuasnya</string>
+    <string name="app_short_name">Vitmate</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Beranda</string>
+    <string name="nav_downloads">Unduhan</string>
+    <string name="nav_settings">Pengaturan</string>
+
+    <!-- Home Screen -->
+    <string name="url_input_hint">Masukkan atau tempel URL media</string>
+    <string name="paste_button">Tempel</string>
+    <string name="clear_button">Hapus</string>
+    <string name="watch_ad_and_continue">Tonton Iklan &amp; Lanjutkan</string>
+    <string name="home_disclaimer">Hanya unduh konten yang Anda miliki atau memiliki izin untuk mengunduhnya.</string>
+    <string name="processing_url">Menganalisis URL media…</string>
+    <string name="loading_ad">Memuat iklan berhadiah…</string>
+    <string name="checking_whitelist">Memverifikasi izin domain…</string>
+
+    <!-- Metadata Preview -->
+    <string name="media_preview_title">Detail Media</string>
+    <string name="format_label">Format</string>
+    <string name="quality_label">Kualitas</string>
+    <string name="format_mp4">Video MP4</string>
+    <string name="format_mp3">Audio MP3</string>
+    <string name="estimated_size">Perkiraan ukuran: %s</string>
+    <string name="size_unknown">Ukuran tidak diketahui</string>
+    <string name="duration_label">Durasi: %s</string>
+    <string name="first_download_ack">Saya mengonfirmasi bahwa saya memiliki hak atau izin untuk mengunduh konten ini.</string>
+    <string name="download_button">Unduh</string>
+    <string name="add_to_queue">Tambahkan ke Antrean</string>
+
+    <!-- Downloads Screen -->
+    <string name="downloads_title">Daftar Unduhan</string>
+    <string name="no_downloads">Belum ada unduhan</string>
+    <string name="no_downloads_sub">Video dan audio yang diunduh akan muncul di sini</string>
+    <string name="status_queued">Dalam Antrean</string>
+    <string name="status_downloading">Mengunduh %d%%</string>
+    <string name="status_completed">Selesai</string>
+    <string name="status_failed">Gagal</string>
+    <string name="action_play">Putar</string>
+    <string name="action_share">Bagikan</string>
+    <string name="action_download_again">Unduh Ulang</string>
+    <string name="action_delete">Hapus</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Pengelola Unduhan</string>
+    <string name="notification_channel_desc">Pemberitahuan untuk unduhan yang sedang berlangsung dan selesai</string>
+    <string name="notification_downloading">Sedang mengunduh: %s</string>
+    <string name="notification_completed">Unduhan selesai: %s</string>
+    <string name="notification_failed">Unduhan gagal: %s</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Pengaturan</string>
+    <string name="section_preferences">Preferensi</string>
+    <string name="setting_language">Bahasa</string>
+    <string name="lang_indonesian">Bahasa Indonesia</string>
+    <string name="lang_english">English</string>
+    <string name="setting_appearance">Tampilan</string>
+    <string name="theme_system">Default sistem</string>
+    <string name="theme_light">Mode terang</string>
+    <string name="theme_dark">Mode gelap</string>
+
+    <string name="section_legal">Legal &amp; Informasi</string>
+    <string name="about_title">Tentang</string>
+    <string name="app_version">Versi %s</string>
+    <string name="privacy_policy">Kebijakan Privasi</string>
+    <string name="terms_of_use">Syarat Penggunaan</string>
+    <string name="ad_privacy_settings">Pengaturan Privasi Iklan</string>
+
+    <!-- Terms of Use -->
+    <string name="terms_title">Syarat Penggunaan</string>
+    <string name="terms_content"><![CDATA[
+Selamat datang di Vitmate: nonton gratis sepuasnya.
+
+1. PENERIMAAN KETENTUAN
+Dengan mengakses atau menggunakan Vitmate, Anda setuju untuk terikat oleh Syarat Penggunaan ini dan seluruh hukum serta regulasi yang berlaku.
+
+2. HAK CIPTA DAN KEKAYAAN INTELEKTUAL
+Vitmate sangat menghormati hak kekayaan intelektual dan secara tegas melarang pelanggaran hak cipta dalam bentuk apa pun. Anda secara sadar mengakui dan menyetujui bahwa:
+• Anda bertanggung jawab penuh atas seluruh konten yang Anda proses, unduh, atau putar menggunakan Vitmate.
+• Anda wajib memiliki seluruh hak, lisensi, atau izin resmi yang sah atas konten media sebelum melakukan pengunduhan.
+• Vitmate adalah alat utilitas pribadi dan BUKAN untuk mengunduh materi berhak cipta tanpa izin eksplisit dari pemegang hak cipta yang sah.
+
+3. PENAFIAN JAMINAN
+Vitmate disediakan "apa adanya" dan "sebagaimana tersedia". Kami tidak menjamin operasi tanpa gangguan atau bebas dari kesalahan.
+
+4. TANGGUNG JAWAB PENGGUNA
+Anda setuju untuk tidak menggunakan Vitmate untuk tujuan yang melanggar hukum atau bertentangan dengan peraturan perundang-undangan yang berlaku.
+    ]]></string>
+
+    <!-- Errors -->
+    <string name="error_invalid_url">Masukkan URL media HTTP atau HTTPS yang valid.</string>
+    <string name="error_unsupported_domain">Domain ini tidak diizinkan dalam daftar putih (whitelist).</string>
+    <string name="error_whitelist_unavailable">Gagal memuat daftar putih domain. Silakan periksa koneksi internet Anda.</string>
+    <string name="error_metadata_failed">Gagal mengekstrak metadata media. Sumber mungkin tidak didukung atau sedang tidak tersedia.</string>
+    <string name="error_format_unavailable">Format media yang diminta tidak tersedia untuk konten ini.</string>
+    <string name="error_quality_unavailable">Pilihan kualitas yang diminta tidak tersedia.</string>
+    <string name="error_size_estimation_unavailable">Perkiraan ukuran file saat ini tidak tersedia.</string>
+    <string name="error_ad_unavailable">Iklan berhadiah belum siap. Silakan coba lagi beberapa saat lagi.</string>
+    <string name="error_ad_not_completed">Iklan berhadiah tidak diselesaikan. Reward harus diterima untuk melanjutkan.</string>
+    <string name="error_download_failed">Pengunduhan gagal. Silakan periksa ruang penyimpanan atau jaringan Anda dan coba lagi.</string>
+    <string name="error_network_failure">Koneksi internet bermasalah. Periksa koneksi data Anda.</string>
+    <string name="error_insufficient_storage">Ruang penyimpanan tidak mencukupi di perangkat Anda.</string>
+    <string name="error_playback_failed">Tidak dapat memutar file media secara lokal.</string>
+    <string name="error_permission_denied">Izin notifikasi diperlukan untuk memantau progres unduhan di latar belakang.</string>
+</resources>

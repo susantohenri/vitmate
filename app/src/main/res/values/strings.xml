@@ -1,0 +1,110 @@
+<resources>
+    <string name="app_name">Vitmate: nonton gratis sepuasnya</string>
+    <string name="app_short_name">Vitmate</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_downloads">Downloads</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Home Screen -->
+    <string name="url_input_hint">Enter or paste media URL</string>
+    <string name="paste_button">Paste</string>
+    <string name="clear_button">Clear</string>
+    <string name="watch_ad_and_continue">Watch Ad &amp; Continue</string>
+    <string name="home_disclaimer">Only download content you own or have permission to download.</string>
+    <string name="processing_url">Analyzing media URL…</string>
+    <string name="loading_ad">Loading rewarded ad…</string>
+    <string name="checking_whitelist">Verifying domain authorization…</string>
+
+    <!-- Metadata Preview -->
+    <string name="media_preview_title">Media Details</string>
+    <string name="format_label">Format</string>
+    <string name="quality_label">Quality</string>
+    <string name="format_mp4">MP4 Video</string>
+    <string name="format_mp3">MP3 Audio</string>
+    <string name="estimated_size">Estimated size: %s</string>
+    <string name="size_unknown">Size unknown</string>
+    <string name="duration_label">Duration: %s</string>
+    <string name="first_download_ack">I confirm that I have the right or permission to download this content.</string>
+    <string name="download_button">Download</string>
+    <string name="add_to_queue">Add to Queue</string>
+
+    <!-- Downloads Screen -->
+    <string name="downloads_title">Downloads</string>
+    <string name="no_downloads">No downloads yet</string>
+    <string name="no_downloads_sub">Downloaded videos and audios will appear here</string>
+    <string name="status_queued">Queued</string>
+    <string name="status_downloading">Downloading %d%%</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_failed">Failed</string>
+    <string name="action_play">Play</string>
+    <string name="action_share">Share</string>
+    <string name="action_download_again">Download Again</string>
+    <string name="action_delete">Delete</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Download Manager</string>
+    <string name="notification_channel_desc">Notifications for ongoing and completed downloads</string>
+    <string name="notification_downloading">Downloading: %s</string>
+    <string name="notification_completed">Download completed: %s</string>
+    <string name="notification_failed">Download failed: %s</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="section_preferences">Preferences</string>
+    <string name="setting_language">Language</string>
+    <string name="lang_indonesian">Bahasa Indonesia</string>
+    <string name="lang_english">English</string>
+    <string name="setting_appearance">Appearance</string>
+    <string name="theme_system">System default</string>
+    <string name="theme_light">Light mode</string>
+    <string name="theme_dark">Dark mode</string>
+
+    <string name="section_legal">Legal &amp; Info</string>
+    <string name="about_title">About</string>
+    <string name="app_version">Version %s</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="terms_of_use">Terms of Use</string>
+    <string name="ad_privacy_settings">Ad Privacy Settings</string>
+
+    <!-- Terms of Use -->
+    <string name="terms_title">Terms of Use</string>
+    <string name="terms_content"><![CDATA[
+Welcome to Vitmate: nonton gratis sepuasnya.
+
+1. ACCEPTANCE OF TERMS
+By accessing or using Vitmate, you agree to be bound by these Terms of Use and all applicable laws and regulations.
+
+2. COPYRIGHT AND INTELLECTUAL PROPERTY
+Vitmate respects intellectual property rights and strictly prohibits any copyright infringement. You explicitly acknowledge and agree that:
+• You are solely responsible for all content you process, download, or play using Vitmate.
+• You must possess all necessary rights, licenses, or legal permissions for any media content before downloading.
+• Vitmate is a personal utility tool and is NOT intended for downloading copyrighted material without explicit authorization from the legitimate copyright holder.
+
+3. DISCLAIMER OF WARRANTIES
+Vitmate is provided "as is" and "as available". We do not warrant uninterrupted or error-free operation.
+
+4. USER RESPONSIBILITY
+You agree not to use Vitmate for any unlawful purposes or in violation of any applicable local, national, or international law.
+    ]]></string>
+
+    <!-- Errors -->
+    <string name="error_invalid_url">Please enter a valid HTTP or HTTPS media URL.</string>
+    <string name="error_unsupported_domain">This domain is not allowed on the whitelist.</string>
+    <string name="error_whitelist_unavailable">Unable to load remote domain whitelist. Please check your network connection.</string>
+    <string name="error_metadata_failed">Failed to extract media metadata. The source might be unsupported or unavailable.</string>
+    <string name="error_format_unavailable">The requested media format is not available for this content.</string>
+    <string name="error_quality_unavailable">The requested quality option is not available.</string>
+    <string name="error_size_estimation_unavailable">File size estimation is currently unavailable.</string>
+    <string name="error_ad_unavailable">Rewarded ad is not ready. Please try again in a moment.</string>
+    <string name="error_ad_not_completed">Rewarded ad was not completed. Reward must be received to continue.</string>
+    <string name="error_download_failed">Download failed. Please check your storage or network and try again.</string>
+    <string name="error_network_failure">Network connection failure. Please check your internet connection.</string>
+    <string name="error_insufficient_storage">Insufficient storage space on your device.</string>
+    <string name="error_playback_failed">Unable to play media file locally.</string>
+    <string name="error_permission_denied">Notification permission is required to track download progress in the background.</string>
+
+    <!-- File Provider -->
+    <string name="fileprovider_authority">com.vitmate.app.fileprovider</string>
+</resources>
