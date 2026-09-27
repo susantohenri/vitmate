@@ -56,12 +56,11 @@ class RemoteConfigRepository(
                     }
                 }
             }
-            // If response unsuccessful, use cached or fallback
-            val fallback = cachedWhitelist ?: WhitelistConfig(1, FALLBACK_DOMAINS)
-            Result.success(fallback)
+            cachedWhitelist?.let { return@withContext Result.success(it) }
+            Result.failure(Exception("Whitelist unavailable"))
         } catch (e: Exception) {
-            val fallback = cachedWhitelist ?: WhitelistConfig(1, FALLBACK_DOMAINS)
-            Result.success(fallback)
+            cachedWhitelist?.let { return@withContext Result.success(it) }
+            Result.failure(e)
         }
     }
 
@@ -85,6 +84,9 @@ class RemoteConfigRepository(
             Result.success(fallback)
         }
     }
+
+    fun getCachedAdsConfig(): AdsConfig? = cachedAdsConfig
+    fun getCachedWhitelist(): WhitelistConfig? = cachedWhitelist
 
     /**
      * Proper hostname matching against whitelist:

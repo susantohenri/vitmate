@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Vitmate: nonton gratis sepuasnya</string>
     <string name="app_short_name">Vitmate</string>
+    <string name="app_tagline">• nonton gratis</string>
 
     <!-- Navigation -->
     <string name="nav_home">Home</string>
@@ -29,6 +30,7 @@
     <string name="first_download_ack">I confirm that I have the right or permission to download this content.</string>
     <string name="download_button">Download</string>
     <string name="add_to_queue">Add to Queue</string>
+    <string name="download_added_to_queue">Download added to queue</string>
 
     <!-- Downloads Screen -->
     <string name="downloads_title">Downloads</string>
@@ -40,6 +42,7 @@
     <string name="status_failed">Failed</string>
     <string name="action_play">Play</string>
     <string name="action_share">Share</string>
+    <string name="share_media_title">Share %s</string>
     <string name="action_download_again">Download Again</string>
     <string name="action_delete">Delete</string>
 

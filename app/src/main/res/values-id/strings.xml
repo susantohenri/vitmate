@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Vitmate: nonton gratis sepuasnya</string>
     <string name="app_short_name">Vitmate</string>
+    <string name="app_tagline">• nonton gratis</string>
 
     <!-- Navigation -->
     <string name="nav_home">Beranda</string>
@@ -29,6 +30,7 @@
     <string name="first_download_ack">Saya mengonfirmasi bahwa saya memiliki hak atau izin untuk mengunduh konten ini.</string>
     <string name="download_button">Unduh</string>
     <string name="add_to_queue">Tambahkan ke Antrean</string>
+    <string name="download_added_to_queue">Unduhan ditambahkan ke antrean</string>
 
     <!-- Downloads Screen -->
     <string name="downloads_title">Daftar Unduhan</string>
@@ -40,6 +42,7 @@
     <string name="status_failed">Gagal</string>
     <string name="action_play">Putar</string>
     <string name="action_share">Bagikan</string>
+    <string name="share_media_title">Bagikan %s</string>
     <string name="action_download_again">Unduh Ulang</string>
     <string name="action_delete">Hapus</string>
 
@@ -104,4 +107,5 @@ Anda setuju untuk tidak menggunakan Vitmate untuk tujuan yang melanggar hukum at
     <string name="error_insufficient_storage">Ruang penyimpanan tidak mencukupi di perangkat Anda.</string>
     <string name="error_playback_failed">Tidak dapat memutar file media secara lokal.</string>
     <string name="error_permission_denied">Izin notifikasi diperlukan untuk memantau progres unduhan di latar belakang.</string>
+    <string name="fileprovider_authority">com.vitmate.app.fileprovider</string>
 </resources>

@@ -52,6 +52,8 @@ class HomeViewModel(
     private val _selectedQuality = MutableStateFlow<QualityOption?>(null)
     val selectedQuality: StateFlow<QualityOption?> = _selectedQuality.asStateFlow()
 
+    val isTermsAcknowledged: StateFlow<Boolean> = preferencesRepository.termsAcknowledgedFlow
+
     private val _isAcknowledgementChecked = MutableStateFlow(preferencesRepository.isTermsAcknowledged())
     val isAcknowledgementChecked: StateFlow<Boolean> = _isAcknowledgementChecked.asStateFlow()
 
@@ -85,7 +87,9 @@ class HomeViewModel(
 
     fun onAcknowledgementChanged(checked: Boolean) {
         _isAcknowledgementChecked.value = checked
-        preferencesRepository.setTermsAcknowledged(checked)
+        if (checked) {
+            preferencesRepository.setTermsAcknowledged(true)
+        }
     }
 
     fun startRewardedAdAndProcessFlow(activity: Activity) {
@@ -113,10 +117,14 @@ class HomeViewModel(
                     // Reward received! Now proceed to Whitelist check & Metadata
                     processWhitelistAndMetadata(url)
                 },
-                onAdFailed = { errorReason ->
+                onAdUnavailable = {
                     _uiState.value = HomeUiState.Error(
-                        messageRes = R.string.error_ad_not_completed,
-                        customMessage = errorReason
+                        messageRes = R.string.error_ad_unavailable
+                    )
+                },
+                onAdNotCompleted = {
+                    _uiState.value = HomeUiState.Error(
+                        messageRes = R.string.error_ad_not_completed
                     )
                 }
             )
@@ -167,6 +175,8 @@ class HomeViewModel(
         val format = _selectedFormat.value
         val quality = _selectedQuality.value
 
+        preferencesRepository.setTermsAcknowledged(true)
+
         val itemId = UUID.randomUUID().toString()
         val downloadItem = DownloadItem(
             id = itemId,
@@ -176,6 +186,7 @@ class HomeViewModel(
             thumbnailUrl = meta.thumbnailUrl,
             formatType = format,
             quality = if (format == MediaFormatType.MP4) quality?.label else "MP3 Audio",
+            qualityId = quality?.formatId,
             status = DownloadStatus.QUEUED,
             progress = 0
         )

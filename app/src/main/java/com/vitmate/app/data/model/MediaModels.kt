@@ -46,6 +46,7 @@ data class DownloadItem(
     val thumbnailUrl: String? = null,
     val formatType: MediaFormatType = MediaFormatType.MP4,
     val quality: String? = null,
+    val qualityId: String? = null,
     val status: DownloadStatus = DownloadStatus.QUEUED,
     val progress: Int = 0,
     val etaSeconds: Long = 0L,

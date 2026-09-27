@@ -3,6 +3,7 @@ package com.vitmate.app.ui.settings
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import com.vitmate.app.BuildConfig
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -214,7 +215,7 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = stringResource(R.string.app_version, "1.0"),
+                            text = stringResource(R.string.app_version, BuildConfig.VERSION_NAME),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )

@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.vitmate.app.R
 import com.vitmate.app.data.model.DownloadItem
 import com.vitmate.app.data.model.DownloadStatus
 import com.vitmate.app.data.model.MediaFormatType
@@ -54,7 +55,8 @@ class DownloadsViewModel(
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
 
-            val chooser = Intent.createChooser(shareIntent, "Share ${item.title}")
+            val chooserTitle = context.getString(R.string.share_media_title, item.title)
+            val chooser = Intent.createChooser(shareIntent, chooserTitle)
             chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(chooser)
         } catch (e: Exception) {
@@ -70,7 +72,7 @@ class DownloadsViewModel(
             url = item.url,
             title = item.title,
             formatType = item.formatType,
-            qualityId = item.quality
+            qualityId = item.qualityId ?: item.quality
         )
     }
 

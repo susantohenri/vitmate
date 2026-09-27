@@ -95,12 +95,14 @@ class AdMobManager(
         if (!consentInformation.canRequestAds()) return
 
         isAdLoading = true
-        val adUnitId = adUnitIdOverride ?: "ca-app-pub-3940256099942544/5224354917"
+        val resolvedAdUnitId = adUnitIdOverride
+            ?: remoteConfigRepository.getCachedAdsConfig()?.rewardedAdUnitId
+            ?: "ca-app-pub-3940256099942544/5224354917"
         val adRequest = AdRequest.Builder().build()
 
         RewardedAd.load(
             context,
-            adUnitId,
+            resolvedAdUnitId,
             adRequest,
             object : RewardedAdLoadCallback() {
                 override fun onAdLoaded(ad: RewardedAd) {
@@ -120,10 +122,12 @@ class AdMobManager(
         activity: Activity,
         adUnitId: String,
         onRewardEarned: () -> Unit,
-        onAdFailed: (String) -> Unit
+        onAdUnavailable: () -> Unit,
+        onAdNotCompleted: () -> Unit
     ) {
-        if (rewardedAd == null) {
-            // Try loading and show once loaded, or fail
+        val currentAd = rewardedAd
+        if (currentAd == null) {
+            // Attempt to load once if not cached, or report unavailable
             isAdLoading = true
             val adRequest = AdRequest.Builder().build()
             RewardedAd.load(
@@ -134,46 +138,47 @@ class AdMobManager(
                     override fun onAdLoaded(ad: RewardedAd) {
                         rewardedAd = ad
                         isAdLoading = false
-                        presentRewardedAd(activity, ad, onRewardEarned, onAdFailed)
+                        presentRewardedAd(activity, ad, adUnitId, onRewardEarned, onAdUnavailable, onAdNotCompleted)
                     }
 
                     override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                         rewardedAd = null
                         isAdLoading = false
-                        onAdFailed(loadAdError.message)
+                        onAdUnavailable()
                     }
                 }
             )
             return
         }
 
-        val ad = rewardedAd ?: return onAdFailed("Ad not ready")
-        presentRewardedAd(activity, ad, onRewardEarned, onAdFailed)
+        presentRewardedAd(activity, currentAd, adUnitId, onRewardEarned, onAdUnavailable, onAdNotCompleted)
     }
 
     private fun presentRewardedAd(
         activity: Activity,
         ad: RewardedAd,
+        adUnitId: String,
         onRewardEarned: () -> Unit,
-        onAdFailed: (String) -> Unit
+        onAdUnavailable: () -> Unit,
+        onAdNotCompleted: () -> Unit
     ) {
         var rewardEarned = false
 
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
                 rewardedAd = null
-                preloadRewardedAd()
+                preloadRewardedAd(adUnitId)
                 if (rewardEarned) {
                     onRewardEarned()
                 } else {
-                    onAdFailed("Rewarded ad not completed")
+                    onAdNotCompleted()
                 }
             }
 
             override fun onAdFailedToShowFullScreenContent(adError: AdError) {
                 rewardedAd = null
-                preloadRewardedAd()
-                onAdFailed(adError.message)
+                preloadRewardedAd(adUnitId)
+                onAdUnavailable()
             }
         }
 

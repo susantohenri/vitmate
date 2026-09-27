@@ -29,6 +29,7 @@ class DownloadService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val downloadQueue = Channel<DownloadTask>(Channel.UNLIMITED)
     private val activeTasks = ConcurrentHashMap<String, DownloadTask>()
+    private val queuedCount = java.util.concurrent.atomic.AtomicInteger(0)
 
     companion object {
         const val CHANNEL_ID = "vitmate_downloads_channel"
@@ -100,6 +101,7 @@ class DownloadService : Service() {
                 val qualityId = intent.getStringExtra(EXTRA_QUALITY)
 
                 val task = DownloadTask(itemId, url, title, formatType, qualityId)
+                queuedCount.incrementAndGet()
                 startForegroundIfNeeded(task.title)
                 serviceScope.launch {
                     downloadQueue.send(task)
@@ -109,7 +111,9 @@ class DownloadService : Service() {
                 val itemId = intent.getStringExtra(EXTRA_ITEM_ID)
                 if (itemId != null) {
                     YtDlpHelper.cancelDownload(itemId)
-                    activeTasks.remove(itemId)
+                    if (activeTasks.remove(itemId) != null) {
+                        queuedCount.decrementAndGet()
+                    }
                 }
             }
         }
@@ -120,12 +124,15 @@ class DownloadService : Service() {
         serviceScope.launch {
             for (task in downloadQueue) {
                 activeTasks[task.itemId] = task
-                processTask(task)
-                activeTasks.remove(task.itemId)
-
-                if (activeTasks.isEmpty()) {
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    stopSelf()
+                try {
+                    processTask(task)
+                } finally {
+                    activeTasks.remove(task.itemId)
+                    val remaining = queuedCount.decrementAndGet()
+                    if (remaining <= 0 && activeTasks.isEmpty()) {
+                        stopForeground(STOP_FOREGROUND_REMOVE)
+                        stopSelf()
+                    }
                 }
             }
         }
@@ -134,6 +141,15 @@ class DownloadService : Service() {
     private suspend fun processTask(task: DownloadTask) {
         val app = application as VitmateApp
         val repo = app.downloadRepository
+
+        // Section 20: Check insufficient storage
+        val downloadDir = YtDlpHelper.getDownloadDir(applicationContext)
+        if (downloadDir.usableSpace < 25L * 1024L * 1024L) {
+            val errorMsg = getString(R.string.error_insufficient_storage)
+            repo.markFailed(task.itemId, errorMsg)
+            showFailedNotification(task.title, errorMsg)
+            return
+        }
 
         repo.updateProgress(task.itemId, 0)
         updateForegroundNotification(task.title, 0)
@@ -163,7 +179,17 @@ class DownloadService : Service() {
                 showCompletedNotification(task.title, file.name)
             },
             onFailure = { error ->
-                val errorMsg = error.localizedMessage ?: getString(R.string.error_download_failed)
+                val msg = error.message ?: ""
+                val errorMsg = when {
+                    msg.contains("ENOSPC", ignoreCase = true) || msg.contains("No space left", ignoreCase = true) ->
+                        getString(R.string.error_insufficient_storage)
+                    msg.contains("unable to connect", ignoreCase = true) ||
+                    msg.contains("Connection refused", ignoreCase = true) ||
+                    msg.contains("timed out", ignoreCase = true) ||
+                    msg.contains("HTTP Error", ignoreCase = true) ->
+                        getString(R.string.error_network_failure)
+                    else -> getString(R.string.error_download_failed)
+                }
                 repo.markFailed(task.itemId, errorMsg)
                 showFailedNotification(task.title, errorMsg)
             }

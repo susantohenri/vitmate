@@ -86,6 +86,7 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val selectedFormat by viewModel.selectedFormat.collectAsState()
     val selectedQuality by viewModel.selectedQuality.collectAsState()
+    val isTermsAcknowledged by viewModel.isTermsAcknowledged.collectAsState()
     val isAckChecked by viewModel.isAcknowledgementChecked.collectAsState()
 
     Scaffold(
@@ -113,7 +114,7 @@ fun HomeScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "• nonton gratis",
+                    text = stringResource(R.string.app_tagline),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                 )
@@ -287,12 +288,13 @@ fun HomeScreen(
                         onFormatSelected = { viewModel.onFormatSelected(it) },
                         selectedQuality = selectedQuality,
                         onQualitySelected = { viewModel.onQualitySelected(it) },
+                        isTermsAcknowledged = isTermsAcknowledged,
                         isAcknowledgementChecked = isAckChecked,
                         onAcknowledgementChanged = { viewModel.onAcknowledgementChanged(it) },
                         onDownloadClicked = {
                             viewModel.startDownload(context) {
                                 scope.launch {
-                                    snackbarHostState.showSnackbar("Download added to queue")
+                                    snackbarHostState.showSnackbar(context.getString(R.string.download_added_to_queue))
                                 }
                                 onNavigateToDownloads()
                             }
@@ -311,6 +313,7 @@ fun MetadataPreviewCard(
     onFormatSelected: (MediaFormatType) -> Unit,
     selectedQuality: com.vitmate.app.data.model.QualityOption?,
     onQualitySelected: (com.vitmate.app.data.model.QualityOption) -> Unit,
+    isTermsAcknowledged: Boolean,
     isAcknowledgementChecked: Boolean,
     onAcknowledgementChanged: (Boolean) -> Unit,
     onDownloadClicked: () -> Unit
@@ -429,32 +432,34 @@ fun MetadataPreviewCard(
             }
 
             // First-download Acknowledgement Checkbox (Section 7)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onAcknowledgementChanged(!isAcknowledgementChecked) }
-                    .padding(vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Checkbox(
-                    checked = isAcknowledgementChecked,
-                    onCheckedChange = { onAcknowledgementChanged(it) },
-                    colors = CheckboxDefaults.colors(
-                        checkedColor = MaterialTheme.colorScheme.primary
+            if (!isTermsAcknowledged) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onAcknowledgementChanged(!isAcknowledgementChecked) }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = isAcknowledgementChecked,
+                        onCheckedChange = { onAcknowledgementChanged(it) },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = MaterialTheme.colorScheme.primary
+                        )
                     )
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = stringResource(R.string.first_download_ack),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.first_download_ack),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
 
-            // Download Button (disabled until acknowledgement checkbox is checked)
+            // Download Button (disabled until acknowledgement checkbox is checked if first-time)
             Button(
                 onClick = onDownloadClicked,
-                enabled = isAcknowledgementChecked,
+                enabled = isTermsAcknowledged || isAcknowledgementChecked,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = BrandAccent,

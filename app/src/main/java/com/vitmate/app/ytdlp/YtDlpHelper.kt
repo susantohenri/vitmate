@@ -35,7 +35,7 @@ object YtDlpHelper {
             val videoInfo: VideoInfo = YoutubeDL.getInstance().getInfo(url)
             val title = videoInfo.title ?: "Media_${System.currentTimeMillis()}"
             val sanitized = sanitizeFilename(title)
-            val duration = videoInfo.duration?.toLong() ?: 0L
+            val duration = videoInfo.duration.toLong()
             val thumbnail = videoInfo.thumbnail
 
             // Extract qualities
@@ -58,7 +58,7 @@ object YtDlpHelper {
                                     label = res,
                                     resolution = res,
                                     ext = fmt.ext ?: "mp4",
-                                    estimatedBytes = fmt.fileSize ?: 0L
+                                    estimatedBytes = fmt.fileSize
                                 )
                             )
                         }
