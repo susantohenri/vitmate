@@ -22,6 +22,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import android.media.MediaScannerConnection
 import java.util.concurrent.ConcurrentHashMap
 
 class DownloadService : Service() {
@@ -30,6 +31,7 @@ class DownloadService : Service() {
     private val downloadQueue = Channel<DownloadTask>(Channel.UNLIMITED)
     private val activeTasks = ConcurrentHashMap<String, DownloadTask>()
     private val queuedCount = java.util.concurrent.atomic.AtomicInteger(0)
+    private val cancelledTaskIds = ConcurrentHashMap.newKeySet<String>()
 
     companion object {
         const val CHANNEL_ID = "vitmate_downloads_channel"
@@ -100,9 +102,10 @@ class DownloadService : Service() {
                 val formatType = MediaFormatType.valueOf(formatStr)
                 val qualityId = intent.getStringExtra(EXTRA_QUALITY)
 
+                cancelledTaskIds.remove(itemId)
                 val task = DownloadTask(itemId, url, title, formatType, qualityId)
                 queuedCount.incrementAndGet()
-                startForegroundIfNeeded(task.title)
+                startForegroundIfNeeded(task.title, task.itemId)
                 serviceScope.launch {
                     downloadQueue.send(task)
                 }
@@ -110,9 +113,17 @@ class DownloadService : Service() {
             ACTION_CANCEL_DOWNLOAD -> {
                 val itemId = intent.getStringExtra(EXTRA_ITEM_ID)
                 if (itemId != null) {
+                    cancelledTaskIds.add(itemId)
                     YtDlpHelper.cancelDownload(itemId)
-                    if (activeTasks.remove(itemId) != null) {
-                        queuedCount.decrementAndGet()
+                    val app = application as VitmateApp
+                    app.downloadRepository.markCancelled(itemId)
+                    val wasActive = activeTasks.containsKey(itemId)
+                    if (!wasActive) {
+                        val remaining = queuedCount.decrementAndGet()
+                        if (remaining <= 0 && activeTasks.isEmpty()) {
+                            stopForeground(STOP_FOREGROUND_REMOVE)
+                            stopSelf()
+                        }
                     }
                 }
             }
@@ -123,6 +134,17 @@ class DownloadService : Service() {
     private fun startWorkerLoop() {
         serviceScope.launch {
             for (task in downloadQueue) {
+                if (cancelledTaskIds.remove(task.itemId)) {
+                    val app = application as VitmateApp
+                    app.downloadRepository.markCancelled(task.itemId)
+                    val remaining = queuedCount.decrementAndGet()
+                    if (remaining <= 0 && activeTasks.isEmpty()) {
+                        stopForeground(STOP_FOREGROUND_REMOVE)
+                        stopSelf()
+                    }
+                    continue
+                }
+
                 activeTasks[task.itemId] = task
                 try {
                     processTask(task)
@@ -142,6 +164,13 @@ class DownloadService : Service() {
         val app = application as VitmateApp
         val repo = app.downloadRepository
 
+        if (cancelledTaskIds.contains(task.itemId)) {
+            cancelledTaskIds.remove(task.itemId)
+            repo.markCancelled(task.itemId)
+            YtDlpHelper.cleanUpPartialFiles(applicationContext, task.title)
+            return
+        }
+
         // Section 20: Check insufficient storage
         val downloadDir = YtDlpHelper.getDownloadDir(applicationContext)
         if (downloadDir.usableSpace < 25L * 1024L * 1024L) {
@@ -152,7 +181,7 @@ class DownloadService : Service() {
         }
 
         repo.updateProgress(task.itemId, 0)
-        updateForegroundNotification(task.title, 0)
+        updateForegroundNotification(task.title, 0, task.itemId)
 
         var lastProgressUpdateTime = 0L
 
@@ -169,29 +198,44 @@ class DownloadService : Service() {
             if (now - lastProgressUpdateTime > 400 || progress == 100) {
                 lastProgressUpdateTime = now
                 repo.updateProgress(task.itemId, progress, etaSeconds)
-                updateForegroundNotification(task.title, progress)
+                updateForegroundNotification(task.title, progress, task.itemId)
             }
         }
 
         result.fold(
             onSuccess = { file ->
-                repo.markCompleted(task.itemId, file.absolutePath, file.length())
-                showCompletedNotification(task.title, file.name)
+                if (cancelledTaskIds.remove(task.itemId)) {
+                    try { file.delete() } catch (_: Exception) {}
+                    repo.markCancelled(task.itemId)
+                } else {
+                    repo.markCompleted(task.itemId, file.absolutePath, file.length())
+                    showCompletedNotification(task.title, file.name)
+                    MediaScannerConnection.scanFile(
+                        applicationContext,
+                        arrayOf(file.absolutePath),
+                        null
+                    ) { _, _ -> }
+                }
             },
             onFailure = { error ->
-                val msg = error.message ?: ""
-                val errorMsg = when {
-                    msg.contains("ENOSPC", ignoreCase = true) || msg.contains("No space left", ignoreCase = true) ->
-                        getString(R.string.error_insufficient_storage)
-                    msg.contains("unable to connect", ignoreCase = true) ||
-                    msg.contains("Connection refused", ignoreCase = true) ||
-                    msg.contains("timed out", ignoreCase = true) ||
-                    msg.contains("HTTP Error", ignoreCase = true) ->
-                        getString(R.string.error_network_failure)
-                    else -> getString(R.string.error_download_failed)
+                if (cancelledTaskIds.remove(task.itemId)) {
+                    repo.markCancelled(task.itemId)
+                    YtDlpHelper.cleanUpPartialFiles(applicationContext, task.title)
+                } else {
+                    val msg = error.message ?: ""
+                    val errorMsg = when {
+                        msg.contains("ENOSPC", ignoreCase = true) || msg.contains("No space left", ignoreCase = true) ->
+                            getString(R.string.error_insufficient_storage)
+                        msg.contains("unable to connect", ignoreCase = true) ||
+                        msg.contains("Connection refused", ignoreCase = true) ||
+                        msg.contains("timed out", ignoreCase = true) ||
+                        msg.contains("HTTP Error", ignoreCase = true) ->
+                            getString(R.string.error_network_failure)
+                        else -> getString(R.string.error_download_failed)
+                    }
+                    repo.markFailed(task.itemId, errorMsg)
+                    showFailedNotification(task.title, errorMsg)
                 }
-                repo.markFailed(task.itemId, errorMsg)
-                showFailedNotification(task.title, errorMsg)
             }
         )
     }
@@ -210,8 +254,8 @@ class DownloadService : Service() {
         }
     }
 
-    private fun startForegroundIfNeeded(title: String) {
-        val notification = buildProgressNotification(title, 0)
+    private fun startForegroundIfNeeded(title: String, itemId: String? = null) {
+        val notification = buildProgressNotification(title, 0, itemId)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
                 NOTIFICATION_ID_FOREGROUND,
@@ -223,13 +267,13 @@ class DownloadService : Service() {
         }
     }
 
-    private fun updateForegroundNotification(title: String, progress: Int) {
-        val notification = buildProgressNotification(title, progress)
+    private fun updateForegroundNotification(title: String, progress: Int, itemId: String? = null) {
+        val notification = buildProgressNotification(title, progress, itemId)
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(NOTIFICATION_ID_FOREGROUND, notification)
     }
 
-    private fun buildProgressNotification(title: String, progress: Int): android.app.Notification {
+    private fun buildProgressNotification(title: String, progress: Int, itemId: String? = null): android.app.Notification {
         val openAppIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             this,
@@ -238,14 +282,33 @@ class DownloadService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        return NotificationCompat.Builder(this, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(getString(R.string.notification_downloading, title))
             .setContentText("$progress%")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setProgress(100, progress, progress == 0)
             .setOngoing(true)
             .setContentIntent(pendingIntent)
-            .build()
+
+        if (itemId != null) {
+            val cancelIntent = Intent(this, DownloadService::class.java).apply {
+                action = ACTION_CANCEL_DOWNLOAD
+                putExtra(EXTRA_ITEM_ID, itemId)
+            }
+            val cancelPendingIntent = PendingIntent.getService(
+                this,
+                itemId.hashCode(),
+                cancelIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            builder.addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                getString(R.string.action_cancel),
+                cancelPendingIntent
+            )
+        }
+
+        return builder.build()
     }
 
     private fun showCompletedNotification(title: String, filename: String) {

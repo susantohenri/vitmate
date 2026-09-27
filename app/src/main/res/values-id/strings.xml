@@ -40,9 +40,12 @@
     <string name="status_downloading">Mengunduh %d%%</string>
     <string name="status_completed">Selesai</string>
     <string name="status_failed">Gagal</string>
+    <string name="status_cancelled">Dibatalkan</string>
     <string name="action_play">Putar</string>
+    <string name="action_open_in_gallery">Buka di Galeri</string>
     <string name="action_share">Bagikan</string>
     <string name="share_media_title">Bagikan %s</string>
+    <string name="action_cancel">Batal</string>
     <string name="action_download_again">Unduh Ulang</string>
     <string name="action_delete">Hapus</string>
 

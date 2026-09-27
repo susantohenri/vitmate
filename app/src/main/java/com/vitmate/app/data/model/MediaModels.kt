@@ -13,7 +13,8 @@ enum class DownloadStatus {
     QUEUED,
     DOWNLOADING,
     COMPLETED,
-    FAILED
+    FAILED,
+    CANCELLED
 }
 
 @Serializable

@@ -14,6 +14,9 @@ import com.vitmate.app.service.DownloadService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import android.media.MediaScannerConnection
+import android.provider.MediaStore
+import android.widget.Toast
 import java.io.File
 
 class DownloadsViewModel(
@@ -33,6 +36,81 @@ class DownloadsViewModel(
 
     fun onDismissPlayer() {
         _playingItem.value = null
+    }
+
+    fun onOpenInGallery(context: Context, item: DownloadItem) {
+        val path = item.localFilePath ?: return
+        val file = File(path)
+        if (!file.exists()) {
+            Toast.makeText(context, R.string.error_playback_failed, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        try {
+            val mimeType = if (item.formatType == MediaFormatType.MP3) "audio/*" else "video/*"
+
+            MediaScannerConnection.scanFile(
+                context.applicationContext,
+                arrayOf(file.absolutePath),
+                arrayOf(mimeType)
+            ) { _, _ -> }
+
+            val uri = FileProvider.getUriForFile(
+                context,
+                "com.vitmate.app.fileprovider",
+                file
+            )
+
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, mimeType)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
+            val chooser = Intent.createChooser(intent, context.getString(R.string.action_open_in_gallery)).apply {
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(chooser)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(context, R.string.error_playback_failed, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun onOpenSystemGallery(context: Context) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            try {
+                val intent = Intent.makeMainSelectorActivity(
+                    Intent.ACTION_MAIN,
+                    Intent.CATEGORY_APP_GALLERY
+                ).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(intent)
+            } catch (e2: Exception) {
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        type = "video/*"
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                } catch (e3: Exception) {
+                    Toast.makeText(context, R.string.action_open_in_gallery, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    fun onCancel(context: Context, item: DownloadItem) {
+        DownloadService.cancelDownload(context, item.id)
+        downloadRepository.markCancelled(item.id)
     }
 
     fun onShare(context: Context, item: DownloadItem) {
@@ -74,6 +152,13 @@ class DownloadsViewModel(
             formatType = item.formatType,
             qualityId = item.qualityId ?: item.quality
         )
+    }
+
+    fun onDelete(context: Context, item: DownloadItem) {
+        if (item.status == DownloadStatus.DOWNLOADING || item.status == DownloadStatus.QUEUED) {
+            DownloadService.cancelDownload(context, item.id)
+        }
+        downloadRepository.deleteItem(item.id, deleteFile = true)
     }
 
     fun onDelete(item: DownloadItem) {

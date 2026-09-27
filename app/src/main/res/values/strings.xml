@@ -40,9 +40,12 @@
     <string name="status_downloading">Downloading %d%%</string>
     <string name="status_completed">Completed</string>
     <string name="status_failed">Failed</string>
+    <string name="status_cancelled">Cancelled</string>
     <string name="action_play">Play</string>
+    <string name="action_open_in_gallery">Open in Gallery</string>
     <string name="action_share">Share</string>
     <string name="share_media_title">Share %s</string>
+    <string name="action_cancel">Cancel</string>
     <string name="action_download_again">Download Again</string>
     <string name="action_delete">Delete</string>
 

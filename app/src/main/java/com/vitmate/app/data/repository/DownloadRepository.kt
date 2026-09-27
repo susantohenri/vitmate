@@ -141,6 +141,21 @@ class DownloadRepository(private val context: Context) {
         persistHistory()
     }
 
+    fun markCancelled(id: String) {
+        val list = _downloadsFlow.value.map { item ->
+            if (item.id == id) {
+                item.copy(
+                    status = DownloadStatus.CANCELLED,
+                    errorMessage = null
+                )
+            } else {
+                item
+            }
+        }
+        _downloadsFlow.value = list
+        persistHistory()
+    }
+
     fun deleteItem(id: String, deleteFile: Boolean = true) {
         val current = _downloadsFlow.value
         val target = current.find { it.id == id }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,9 +20,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.FolderZip
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
@@ -61,6 +64,7 @@ import com.vitmate.app.ui.theme.BrandPrimary
 import com.vitmate.app.ui.theme.StatusError
 import com.vitmate.app.ui.theme.StatusQueued
 import com.vitmate.app.ui.theme.StatusSuccess
+import com.vitmate.app.ui.theme.StatusWarning
 
 @Composable
 fun DownloadsScreen(
@@ -105,6 +109,16 @@ fun DownloadsScreen(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                         )
                     }
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(
+                    onClick = { viewModel.onOpenSystemGallery(context) }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoLibrary,
+                        contentDescription = stringResource(R.string.action_open_in_gallery),
+                        tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                    )
                 }
             }
 
@@ -151,9 +165,11 @@ fun DownloadsScreen(
                         DownloadItemCard(
                             item = item,
                             onPlay = { viewModel.onPlay(item) },
+                            onOpenInGallery = { viewModel.onOpenInGallery(context, item) },
                             onShare = { viewModel.onShare(context, item) },
+                            onCancel = { viewModel.onCancel(context, item) },
                             onDownloadAgain = { viewModel.onDownloadAgain(context, item) },
-                            onDelete = { viewModel.onDelete(item) }
+                            onDelete = { viewModel.onDelete(context, item) }
                         )
                     }
                 }
@@ -177,7 +193,9 @@ fun DownloadsScreen(
 fun DownloadItemCard(
     item: DownloadItem,
     onPlay: () -> Unit,
+    onOpenInGallery: () -> Unit,
     onShare: () -> Unit,
+    onCancel: () -> Unit,
     onDownloadAgain: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -252,6 +270,7 @@ fun DownloadItemCard(
                             DownloadStatus.DOWNLOADING -> stringResource(R.string.status_downloading, item.progress) to BrandPrimary
                             DownloadStatus.COMPLETED -> stringResource(R.string.status_completed) to StatusSuccess
                             DownloadStatus.FAILED -> stringResource(R.string.status_failed) to StatusError
+                            DownloadStatus.CANCELLED -> stringResource(R.string.status_cancelled) to StatusWarning
                         }
 
                         Text(
@@ -290,10 +309,10 @@ fun DownloadItemCard(
 
             // Action Buttons
             Spacer(modifier = Modifier.height(10.dp))
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 if (item.status == DownloadStatus.COMPLETED) {
                     FilledTonalButton(
@@ -311,7 +330,20 @@ fun DownloadItemCard(
                         Text(stringResource(R.string.action_play), style = MaterialTheme.typography.labelMedium)
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    OutlinedButton(
+                        onClick = onOpenInGallery,
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PhotoLibrary,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.action_open_in_gallery), style = MaterialTheme.typography.labelMedium)
+                    }
 
                     OutlinedButton(
                         onClick = onShare,
@@ -328,8 +360,6 @@ fun DownloadItemCard(
                         Text(stringResource(R.string.action_share), style = MaterialTheme.typography.labelMedium)
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
-
                     IconButton(
                         onClick = onDownloadAgain,
                         modifier = Modifier.size(36.dp)
@@ -340,7 +370,25 @@ fun DownloadItemCard(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                } else if (item.status == DownloadStatus.FAILED) {
+                } else if (item.status == DownloadStatus.DOWNLOADING || item.status == DownloadStatus.QUEUED) {
+                    OutlinedButton(
+                        onClick = onCancel,
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                        modifier = Modifier.height(36.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.action_cancel), style = MaterialTheme.typography.labelMedium)
+                    }
+                } else if (item.status == DownloadStatus.FAILED || item.status == DownloadStatus.CANCELLED) {
                     OutlinedButton(
                         onClick = onDownloadAgain,
                         shape = RoundedCornerShape(8.dp),
@@ -356,8 +404,6 @@ fun DownloadItemCard(
                         Text(stringResource(R.string.action_download_again), style = MaterialTheme.typography.labelMedium)
                     }
                 }
-
-                Spacer(modifier = Modifier.width(4.dp))
 
                 IconButton(
                     onClick = onDelete,

@@ -170,4 +170,18 @@ object YtDlpHelper {
             // Ignore
         }
     }
+
+    fun cleanUpPartialFiles(context: Context, title: String) {
+        try {
+            val downloadDir = getDownloadDir(context)
+            val sanitized = sanitizeFilename(title)
+            downloadDir.listFiles()?.forEach { file ->
+                if (file.name.startsWith(sanitized)) {
+                    file.delete()
+                }
+            }
+        } catch (e: Exception) {
+            // Ignore
+        }
+    }
 }
