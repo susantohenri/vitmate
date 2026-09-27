@@ -2,6 +2,9 @@ package com.vitmate.app.ads
 
 import android.app.Activity
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -22,6 +25,7 @@ class AdMobManager(
     private val context: Context,
     private val remoteConfigRepository: RemoteConfigRepository
 ) {
+    private val mainHandler = Handler(Looper.getMainLooper())
     private val consentInformation: ConsentInformation =
         UserMessagingPlatform.getConsentInformation(context)
 
@@ -64,9 +68,8 @@ class AdMobManager(
                 }
             },
             { requestConsentError ->
-                if (consentInformation.canRequestAds()) {
-                    initializeMobileAds()
-                }
+                Log.w("AdMobManager", "Consent update error: ${requestConsentError.message}")
+                initializeMobileAds()
                 onComplete()
             }
         )
@@ -79,43 +82,53 @@ class AdMobManager(
 
     private fun initializeMobileAds() {
         if (isMobileAdsInitializeCalled.getAndSet(true)) return
-        MobileAds.initialize(context) {
-            preloadRewardedAd()
+        mainHandler.post {
+            MobileAds.initialize(context) { status ->
+                Log.d("AdMobManager", "MobileAds initialized: $status")
+                preloadRewardedAd()
+            }
         }
     }
 
     fun showPrivacyOptionsForm(activity: Activity, onDismissed: () -> Unit = {}) {
         UserMessagingPlatform.showPrivacyOptionsForm(activity) { formError ->
+            if (formError != null) {
+                Log.w("AdMobManager", "Privacy options form error: ${formError.message}")
+            }
             onDismissed()
         }
     }
 
     fun preloadRewardedAd(adUnitIdOverride: String? = null) {
-        if (rewardedAd != null || isAdLoading) return
-        if (!consentInformation.canRequestAds()) return
+        mainHandler.post {
+            if (rewardedAd != null || isAdLoading) return@post
 
-        isAdLoading = true
-        val resolvedAdUnitId = adUnitIdOverride
-            ?: remoteConfigRepository.getCachedAdsConfig()?.rewardedAdUnitId
-            ?: "ca-app-pub-3940256099942544/5224354917"
-        val adRequest = AdRequest.Builder().build()
+            isAdLoading = true
+            val resolvedAdUnitId = adUnitIdOverride
+                ?: remoteConfigRepository.getCachedAdsConfig()?.rewardedAdUnitId
+                ?: "ca-app-pub-3940256099942544/5224354917"
+            val adRequest = AdRequest.Builder().build()
 
-        RewardedAd.load(
-            context,
-            resolvedAdUnitId,
-            adRequest,
-            object : RewardedAdLoadCallback() {
-                override fun onAdLoaded(ad: RewardedAd) {
-                    rewardedAd = ad
-                    isAdLoading = false
+            Log.d("AdMobManager", "Preloading rewarded ad: $resolvedAdUnitId")
+            RewardedAd.load(
+                context,
+                resolvedAdUnitId,
+                adRequest,
+                object : RewardedAdLoadCallback() {
+                    override fun onAdLoaded(ad: RewardedAd) {
+                        Log.d("AdMobManager", "Rewarded ad successfully preloaded")
+                        rewardedAd = ad
+                        isAdLoading = false
+                    }
+
+                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                        Log.e("AdMobManager", "Rewarded ad failed to preload: ${loadAdError.message} (code ${loadAdError.code})")
+                        rewardedAd = null
+                        isAdLoading = false
+                    }
                 }
-
-                override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                    rewardedAd = null
-                    isAdLoading = false
-                }
-            }
-        )
+            )
+        }
     }
 
     fun showRewardedAd(
@@ -125,33 +138,42 @@ class AdMobManager(
         onAdUnavailable: () -> Unit,
         onAdNotCompleted: () -> Unit
     ) {
-        val currentAd = rewardedAd
-        if (currentAd == null) {
-            // Attempt to load once if not cached, or report unavailable
-            isAdLoading = true
-            val adRequest = AdRequest.Builder().build()
-            RewardedAd.load(
-                activity,
-                adUnitId,
-                adRequest,
-                object : RewardedAdLoadCallback() {
-                    override fun onAdLoaded(ad: RewardedAd) {
-                        rewardedAd = ad
-                        isAdLoading = false
-                        presentRewardedAd(activity, ad, adUnitId, onRewardEarned, onAdUnavailable, onAdNotCompleted)
-                    }
+        mainHandler.post {
+            if (!isMobileAdsInitializeCalled.get()) {
+                initializeMobileAds()
+            }
 
-                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                        rewardedAd = null
-                        isAdLoading = false
-                        onAdUnavailable()
+            val currentAd = rewardedAd
+            if (currentAd == null) {
+                // Attempt to load once if not cached, or report unavailable
+                isAdLoading = true
+                val adRequest = AdRequest.Builder().build()
+                Log.d("AdMobManager", "Loading rewarded ad on demand: $adUnitId")
+                RewardedAd.load(
+                    activity,
+                    adUnitId,
+                    adRequest,
+                    object : RewardedAdLoadCallback() {
+                        override fun onAdLoaded(ad: RewardedAd) {
+                            Log.d("AdMobManager", "On-demand rewarded ad loaded successfully")
+                            rewardedAd = ad
+                            isAdLoading = false
+                            presentRewardedAd(activity, ad, adUnitId, onRewardEarned, onAdUnavailable, onAdNotCompleted)
+                        }
+
+                        override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                            Log.e("AdMobManager", "On-demand rewarded ad failed to load: ${loadAdError.message} (code: ${loadAdError.code})")
+                            rewardedAd = null
+                            isAdLoading = false
+                            onAdUnavailable()
+                        }
                     }
-                }
-            )
-            return
+                )
+                return@post
+            }
+
+            presentRewardedAd(activity, currentAd, adUnitId, onRewardEarned, onAdUnavailable, onAdNotCompleted)
         }
-
-        presentRewardedAd(activity, currentAd, adUnitId, onRewardEarned, onAdUnavailable, onAdNotCompleted)
     }
 
     private fun presentRewardedAd(
@@ -166,6 +188,7 @@ class AdMobManager(
 
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
+                Log.d("AdMobManager", "Rewarded ad dismissed. Reward earned: $rewardEarned")
                 rewardedAd = null
                 preloadRewardedAd(adUnitId)
                 if (rewardEarned) {
@@ -176,6 +199,7 @@ class AdMobManager(
             }
 
             override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                Log.e("AdMobManager", "Rewarded ad failed to show: ${adError.message}")
                 rewardedAd = null
                 preloadRewardedAd(adUnitId)
                 onAdUnavailable()
@@ -183,6 +207,7 @@ class AdMobManager(
         }
 
         ad.show(activity) { rewardItem ->
+            Log.d("AdMobManager", "User earned reward: ${rewardItem.amount} ${rewardItem.type}")
             rewardEarned = true
         }
     }

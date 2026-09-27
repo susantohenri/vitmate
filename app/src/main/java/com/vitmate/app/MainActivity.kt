@@ -30,6 +30,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -38,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import com.vitmate.app.data.repository.AppLanguage
+import com.vitmate.app.util.LocalizedActivityContext
 import com.vitmate.app.data.repository.AppThemeMode
 import com.vitmate.app.ui.downloads.DownloadsScreen
 import com.vitmate.app.ui.downloads.DownloadsViewModel
@@ -120,7 +122,10 @@ class MainActivity : ComponentActivity() {
             val updatedConfig = android.content.res.Configuration(configuration).apply {
                 setLocale(currentLocale)
             }
-            val localizedContext = LocalContext.current.createConfigurationContext(updatedConfig)
+            val localizedContext = remember(currentLocale) {
+                val configContext = createConfigurationContext(updatedConfig)
+                LocalizedActivityContext(this@MainActivity, configContext)
+            }
 
             CompositionLocalProvider(
                 LocalConfiguration provides updatedConfig,

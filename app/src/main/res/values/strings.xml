@@ -60,7 +60,7 @@
     <string name="lang_indonesian">Bahasa Indonesia</string>
     <string name="lang_english">English</string>
     <string name="setting_appearance">Appearance</string>
-    <string name="theme_system">System default</string>
+    <string name="theme_system">Default</string>
     <string name="theme_light">Light mode</string>
     <string name="theme_dark">Dark mode</string>
 

@@ -3,6 +3,7 @@ package com.vitmate.app.ui.home
 import android.app.Activity
 import android.content.ClipboardManager
 import android.content.Context
+import com.vitmate.app.util.findActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -78,7 +79,7 @@ fun HomeScreen(
     onNavigateToDownloads: () -> Unit
 ) {
     val context = LocalContext.current
-    val activity = context as? Activity
+    val activity = context.findActivity()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -195,9 +196,8 @@ fun HomeScreen(
 
             Button(
                 onClick = {
-                    if (activity != null) {
-                        viewModel.startRewardedAdAndProcessFlow(activity)
-                    }
+                    val act = activity ?: context.findActivity()
+                    viewModel.startRewardedAdAndProcessFlow(act)
                 },
                 enabled = urlInput.isNotBlank() && !isLoading,
                 shape = RoundedCornerShape(12.dp),

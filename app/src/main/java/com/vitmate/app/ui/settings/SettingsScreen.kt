@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import com.vitmate.app.BuildConfig
+import com.vitmate.app.util.findActivity
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -58,7 +59,7 @@ fun SettingsScreen(
     onNavigateToTerms: () -> Unit
 ) {
     val context = LocalContext.current
-    val activity = context as? Activity
+    val activity = context.findActivity()
     val themeMode by viewModel.themeMode.collectAsState()
     val language by viewModel.language.collectAsState()
     val isPrivacyOptionsRequired by viewModel.isPrivacyOptionsRequired.collectAsState()
@@ -228,11 +229,17 @@ fun SettingsScreen(
                     title = stringResource(R.string.privacy_policy),
                     trailingIcon = Icons.AutoMirrored.Filled.OpenInNew,
                     onClick = {
-                        val intent = Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse("https://tokiocv.blogspot.com/2026/07/privacy-policy.html")
-                        )
-                        context.startActivity(intent)
+                        try {
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("https://tokiocv.blogspot.com/2026/07/privacy-policy.html")
+                            ).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            android.util.Log.e("SettingsScreen", "Failed to open privacy policy", e)
+                        }
                     }
                 )
 
@@ -245,12 +252,13 @@ fun SettingsScreen(
                 )
 
                 // Google UMP Ad Privacy Settings (if required)
-                if (isPrivacyOptionsRequired && activity != null) {
+                val resolvedActivity = activity ?: context.findActivity()
+                if (isPrivacyOptionsRequired && resolvedActivity != null) {
                     SettingsActionCard(
                         icon = Icons.Default.Security,
                         title = stringResource(R.string.ad_privacy_settings),
                         trailingIcon = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                        onClick = { viewModel.onShowPrivacyOptions(activity) }
+                        onClick = { viewModel.onShowPrivacyOptions(resolvedActivity) }
                     )
                 }
             }

@@ -92,7 +92,7 @@ class HomeViewModel(
         }
     }
 
-    fun startRewardedAdAndProcessFlow(activity: Activity) {
+    fun startRewardedAdAndProcessFlow(activity: Activity?) {
         val url = _urlInput.value.trim()
         if (url.isBlank() || (!url.startsWith("http://", ignoreCase = true) && !url.startsWith("https://", ignoreCase = true))) {
             _uiState.value = HomeUiState.Error(messageRes = R.string.error_invalid_url)
@@ -104,8 +104,8 @@ class HomeViewModel(
         viewModelScope.launch {
             val adsConfig = remoteConfigRepository.fetchAdsConfig().getOrDefault(com.vitmate.app.data.model.AdsConfig())
 
-            if (!adsConfig.isAdsEnabled) {
-                // If ads are disabled by remote config, proceed directly
+            if (!adsConfig.isAdsEnabled || activity == null) {
+                // If ads are disabled by remote config or activity is null, proceed directly
                 processWhitelistAndMetadata(url)
                 return@launch
             }
