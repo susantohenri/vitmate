@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.vitmate.app"
+    namespace = "com.henrisusanto.vitmate"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.vitmate.app"
+        applicationId = "com.henrisusanto.vitmate"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

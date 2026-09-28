@@ -46,7 +46,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.vitmate.app.fileprovider"
+            android:authorities="com.henrisusanto.vitmate.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
